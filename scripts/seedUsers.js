@@ -8,10 +8,34 @@ const supabase = createClient(
 
 async function seed() {
   const users = [
-    { email: 'admin@example.com', password: 'angel123', role: 'ADMIN' },
-    { email: 'superadmin@example.com', password: 'angel123', role: 'SUPERADMIN' },
-    { email: 'employee@example.com', password: 'angel123', role: 'EMPLOYEE' },
-    { email: 'you@example.com', password: 'angel123', role: 'SERVICE_PROVIDER' },
+    {
+      email: 'admin@example.com',
+      password: 'angel123',
+      role: 'ADMIN',
+      name: 'Admin One',
+      phone: '+94711234567',
+    },
+    {
+      email: 'superadmin@example.com',
+      password: 'angel123',
+      role: 'SUPERADMIN',
+      name: 'Superadmin Hero',
+      phone: '+94719876543',
+    },
+    {
+      email: 'employee@example.com',
+      password: 'angel123',
+      role: 'EMPLOYEE',
+      name: 'Employee Worker',
+      phone: '+94700011223',
+    },
+    {
+      email: 'you@example.com',
+      password: 'angel123',
+      role: 'SERVICE_PROVIDER',
+      name: 'You The Owner',
+      phone: '+94781122334',
+    },
   ];
 
   for (const user of users) {
@@ -19,6 +43,10 @@ async function seed() {
       email: user.email,
       password: user.password,
       email_confirm: true,
+      phone: user.phone,
+      user_metadata: {
+        name: user.name,
+      },
     });
 
     if (authError) {
@@ -33,6 +61,9 @@ async function seed() {
           id: authUser.user.id,
           email: user.email,
           role: user.role,
+          stationId: '1', // ⚠️ Replace with real station UUID if needed
+          name: user.name,
+          phone: user.phone,
         },
       ]);
 

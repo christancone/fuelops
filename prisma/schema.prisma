@@ -25,7 +25,8 @@ model User {
   stationId String?
   station   Station? @relation(fields: [stationId], references: [id])
   createdAt DateTime @default(now())
-
+  name      String? 
+  phone     String?  
   approvalRequests ApprovalRequest[] @relation("RequestedBy")
   approvalsMade    ApprovalRequest[] @relation("ApprovedBy")
 }
@@ -51,7 +52,7 @@ model Station {
   expenses            Expense[]
   sales               StoreSale[]
   fuelRefills         FuelRefill[]
-  tankReconciliations TankReconciliation[] // ✅ added to fix the relation
+  tankReconciliations TankReconciliation[] 
 }
 
 model Employee {
