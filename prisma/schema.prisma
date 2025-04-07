@@ -1,0 +1,204 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//
+// 🔐 ROLES & USERS
+//
+
+enum Role {
+  SERVICE_PROVIDER
+  SUPERADMIN
+  ADMIN
+  EMPLOYEE
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  role      Role
+  stationId String?
+  station   Station? @relation(fields: [stationId], references: [id])
+  createdAt DateTime @default(now())
+
+  approvalRequests ApprovalRequest[] @relation("RequestedBy")
+  approvalsMade    ApprovalRequest[] @relation("ApprovedBy")
+}
+
+
+//
+// 🏪 FUEL STATION CORE
+//
+
+model Station {
+  id        String   @id @default(uuid())
+  name      String
+  location  String
+  createdAt DateTime @default(now())
+
+  users               User[]
+  employees           Employee[]
+  tanks               Tank[]
+  nozzles             Nozzle[]
+  approvalSettings    ApprovalSetting[]
+  approvalRequests    ApprovalRequest[]
+  products            Product[]
+  expenses            Expense[]
+  sales               StoreSale[]
+  fuelRefills         FuelRefill[]
+  tankReconciliations TankReconciliation[] // ✅ added to fix the relation
+}
+
+model Employee {
+  id        String   @id @default(uuid())
+  name      String
+  contact   String
+  nic       String
+  address   String
+  status    String // active, pending, resigned
+  stationId String
+  createdAt DateTime @default(now())
+  station   Station  @relation(fields: [stationId], references: [id])
+}
+
+//
+// ⛽ TANKS & NOZZLES
+//
+
+model Tank {
+  id            String   @id @default(uuid())
+  name          String
+  fuelType      String
+  capacity      Float
+  currentVolume Float
+  stationId     String
+  createdAt     DateTime @default(now())
+  station       Station  @relation(fields: [stationId], references: [id])
+
+  nozzles         Nozzle[]
+  reconciliations TankReconciliation[]
+  refills         FuelRefill[]
+}
+
+model Nozzle {
+  id        String   @id @default(uuid())
+  label     String
+  tankId    String
+  stationId String
+  createdAt DateTime @default(now())
+  tank      Tank     @relation(fields: [tankId], references: [id])
+  station   Station  @relation(fields: [stationId], references: [id])
+}
+
+//
+// 🔁 APPROVAL SYSTEM
+//
+
+model ApprovalSetting {
+  id               String  @id @default(uuid())
+  stationId        String
+  actionKey        String // e.g. salary_change, tank_adjustment
+  requiresApproval Boolean @default(true)
+  station          Station @relation(fields: [stationId], references: [id])
+}
+
+model ApprovalRequest {
+  id                       String    @id @default(uuid())
+  stationId                String
+  actionKey                String
+  resourceId               String // UUID of the affected record
+  status                   String // pending, approved, rejected, auto-approved, locally-approved
+  reason                   String?
+  requestedById            String
+  approvedById             String?
+  approvedViaLocalPassword Boolean   @default(false)
+  createdAt                DateTime  @default(now())
+  approvedAt               DateTime?
+
+  station     Station @relation(fields: [stationId], references: [id])
+  requestedBy User    @relation("RequestedBy", fields: [requestedById], references: [id])
+  approvedBy  User?   @relation("ApprovedBy", fields: [approvedById], references: [id])
+}
+
+//
+// 🔄 TANK REFILL & RECONCILIATION
+//
+
+model FuelRefill {
+  id          String   @id @default(uuid())
+  tankId      String
+  stationId   String
+  quantity    Float
+  actualAdded Float
+  errorVolume Float
+  reason      String?
+  status      String // pending, approved, auto-approved
+  createdAt   DateTime @default(now())
+
+  tank    Tank    @relation(fields: [tankId], references: [id])
+  station Station @relation(fields: [stationId], references: [id])
+}
+
+model TankReconciliation {
+  id             String   @id @default(uuid())
+  tankId         String
+  stationId      String
+  date           DateTime
+  expectedVolume Float
+  actualVolume   Float
+  adjustment     Float
+  reason         String?
+  status         String // auto-approved, pending, approved
+  createdAt      DateTime @default(now())
+
+  tank    Tank    @relation(fields: [tankId], references: [id])
+  station Station @relation(fields: [stationId], references: [id])
+}
+
+//
+// 🛒 STORE / POS
+//
+
+model Product {
+  id            String   @id @default(uuid())
+  name          String
+  purchasePrice Float
+  sellingPrice  Float
+  quantity      Int
+  stationId     String
+  createdAt     DateTime @default(now())
+  station       Station  @relation(fields: [stationId], references: [id])
+
+  sales StoreSale[]
+}
+
+model StoreSale {
+  id         String   @id @default(uuid())
+  productId  String
+  quantity   Int
+  totalPrice Float
+  stationId  String
+  createdAt  DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id])
+  station Station @relation(fields: [stationId], references: [id])
+}
+
+//
+// 💸 EXPENSES
+//
+
+model Expense {
+  id        String   @id @default(uuid())
+  title     String
+  amount    Float
+  stationId String
+  reason    String?
+  createdAt DateTime @default(now())
+  station   Station  @relation(fields: [stationId], references: [id])
+}
