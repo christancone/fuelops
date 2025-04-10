@@ -34,7 +34,7 @@ export default function LandingPage() {
               className="text-lg px-8 py-6"
               onClick={() => router.push('/register-station')}
             >
-              Register Your Fuel Business  test test test
+              Register Your Fuel Business  test 
             </Button>
             <Button
               variant="secondary"
