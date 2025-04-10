@@ -5,16 +5,11 @@ import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Button } from '@/components/ui/button'
 
-const SuperadminDashboard = () => {
+export default function ManagerDashboard() {
   const router = useRouter()
   const supabase = createClientComponentClient()
 
-  interface UserData {
-    name: string
-    role: string
-  }
-
-  const [userData, setUserData] = useState<UserData | null>(null)
+  const [userData, setUserData] = useState<{ name: string; role: string } | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -65,6 +60,4 @@ const SuperadminDashboard = () => {
       </Button>
     </div>
   )
-}
-
-export default SuperadminDashboard
+} 

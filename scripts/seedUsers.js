@@ -9,68 +9,92 @@ const supabase = createClient(
 async function seed() {
   const users = [
     {
-      email: 'admin@example.com',
+      email: 'service@fuelops.com',
       password: 'angel123',
-      role: 'ADMIN',
-      name: 'Admin One',
+      role: 'SERVICE_PROVIDER',
+      name: 'Service Provider',
       phone: '+94711234567',
     },
     {
-      email: 'superadmin@example.com',
+      email: 'owner@fuelops.com',
       password: 'angel123',
-      role: 'SUPERADMIN',
-      name: 'Superadmin Hero',
+      role: 'OWNER',
+      name: 'Station Owner',
       phone: '+94719876543',
     },
     {
-      email: 'employee@example.com',
+      email: 'manager@fuelops.com',
       password: 'angel123',
-      role: 'EMPLOYEE',
-      name: 'Employee Worker',
+      role: 'MANAGER',
+      name: 'Station Manager',
       phone: '+94700011223',
     },
     {
-      email: 'you@example.com',
+      email: 'accountant@fuelops.com',
       password: 'angel123',
-      role: 'SERVICE_PROVIDER',
-      name: 'You The Owner',
-      phone: '+94781122334',
+      role: 'ACCOUNTANT',
+      name: 'Station Accountant',
+      phone: '+94700011224',
     },
+    {
+      email: 'employee@fuelops.com',
+      password: 'angel123',
+      role: 'EMPLOYEE',
+      name: 'Station Employee',
+      phone: '+94700011225',
+    },
+    {
+      email: 'customer@fuelops.com',
+      password: 'angel123',
+      role: 'CUSTOMER',
+      name: 'Customer',
+      phone: '+94781122334',
+    }
   ];
 
   for (const user of users) {
-    const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-      email: user.email,
-      password: user.password,
-      email_confirm: true,
-      phone: user.phone,
-      user_metadata: {
-        name: user.name,
-      },
-    });
-
-    if (authError) {
-      console.error(`❌ Failed to create auth user ${user.email}:`, authError.message);
-      continue;
-    }
-
-    const { data: dbUser, error: dbError } = await supabase
-      .from('User')
-      .insert([
-        {
-          id: authUser.user.id,
-          email: user.email,
-          role: user.role,
-          stationId: '1', // ⚠️ Replace with real station UUID if needed
+    try {
+      // Create auth user
+      const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+        email: user.email,
+        password: user.password,
+        email_confirm: true,
+        phone: user.phone,
+        user_metadata: {
           name: user.name,
-          phone: user.phone,
-        },
-      ]);
+          role: user.role
+        }
+      });
 
-    if (dbError) {
-      console.error(`❌ Failed to insert ${user.email} into User table:`, dbError.message);
-    } else {
-      console.log(`✅ Created user: ${user.email} (${user.role})`);
+      if (authError) {
+        console.error(`❌ Failed to create auth user ${user.email}:`, authError.message);
+        continue;
+      }
+
+      console.log(`✅ Created auth user: ${user.email}`);
+
+      // Create user in User table
+      const { error: dbError } = await supabase
+        .from('User')
+        .insert([
+          {
+            id: authUser.user.id,
+            email: user.email,
+            role: user.role,
+            name: user.name,
+            phone: user.phone,
+            stationId: null
+          }
+        ]);
+
+      if (dbError) {
+        console.error(`❌ Failed to insert ${user.email} into User table:`, dbError.message);
+        console.error('Error details:', dbError);
+      } else {
+        console.log(`✅ Created user in User table: ${user.email}`);
+      }
+    } catch (error) {
+      console.error(`❌ Error processing user ${user.email}:`, error.message);
     }
   }
 }

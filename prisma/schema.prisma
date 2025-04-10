@@ -13,9 +13,11 @@ datasource db {
 
 enum Role {
   SERVICE_PROVIDER
-  SUPERADMIN
-  ADMIN
+  OWNER
+  MANAGER
+  ACCOUNTANT
   EMPLOYEE
+  CUSTOMER
 }
 
 model User {

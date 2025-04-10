@@ -46,4 +46,4 @@ async function testLogin(email, password) {
   console.log(`🏪 Station ID: ${userData.stationId}`);
 }
 
-testLogin('you@example.com', 'angel123');
+testLogin('owner@fuelops.com', 'angel123');

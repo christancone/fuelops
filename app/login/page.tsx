@@ -52,9 +52,11 @@ export default function LoginPage() {
     setRedirecting(true)
 
     // ✅ Redirect based on role
-    if (role === 'ADMIN') router.push('/admin/dashboard')
-    else if (role === 'SUPERADMIN') router.push('/superadmin/dashboard')
+    if (role === 'OWNER') router.push('/owner/dashboard')
+    else if (role === 'MANAGER') router.push('/manager/dashboard')
+    else if (role === 'ACCOUNTANT') router.push('/accountant/dashboard')
     else if (role === 'EMPLOYEE') router.push('/employee/dashboard')
+    else if (role === 'CUSTOMER') router.push('/customer/dashboard')
     else if (role === 'SERVICE_PROVIDER') router.push('/service/dashboard')
     else {
       setError('Unknown role')
