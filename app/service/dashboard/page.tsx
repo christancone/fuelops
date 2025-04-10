@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 interface UserData {
   name: string
   role: string
+  stationId: string
 }
 
 interface Owner {
@@ -49,6 +50,49 @@ const ServiceProviderDashboard = () => {
 
   const paginatedOwners = filteredOwners.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
+  const fetchOwners = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('User')
+      .select('*')
+      .eq('role', 'owner')
+      .eq('stationId', userData?.stationId)
+
+    if (error) {
+      console.error('Error fetching owners:', error)
+      return
+    }
+
+    if (data) {
+      setOwners(data)
+    }
+  }, [supabase, userData?.stationId])
+
+  const handleEditOwner = useCallback(async (id: string, field: 'name' | 'stationId', value: string) => {
+    // Only update if the value has changed
+    if (editingValues[id]?.[field] === value) return
+
+    try {
+      const { error } = await supabase
+        .from('User')
+        .update({ [field]: value })
+        .eq('id', id)
+
+      if (error) {
+        console.error('Failed to update owner:', error.message)
+      } else {
+        // Update local state
+        setEditingValues(prev => ({
+          ...prev,
+          [id]: { ...prev[id], [field]: value }
+        }))
+        // Refresh the owners list
+        fetchOwners()
+      }
+    } catch (error) {
+      console.error('Error updating owner:', error)
+    }
+  }, [supabase, fetchOwners, editingValues])
+
   useEffect(() => {
     const fetchUser = async () => {
       const {
@@ -63,14 +107,14 @@ const ServiceProviderDashboard = () => {
 
       const { data, error } = await supabase
         .from('User')
-        .select('name, role')
+        .select('name, role, stationId')
         .eq('id', user.id)
         .single()
 
       if (error) {
         console.error('Failed to fetch user data:', error.message)
       } else {
-        setUserData({ name: data.name, role: data.role })
+        setUserData({ name: data.name, role: data.role, stationId: data.stationId })
         fetchOwners()
       }
 
@@ -78,25 +122,7 @@ const ServiceProviderDashboard = () => {
     }
 
     fetchUser()
-  }, [supabase, router])
-
-  const fetchOwners = async () => {
-    const { data, error } = await supabase
-      .from('User')
-      .select('id, email, name, stationId')
-      .eq('role', 'OWNER')
-
-    if (error) console.error('Failed to fetch owners:', error.message)
-    else {
-      setOwners(data || [])
-      // Initialize editing values
-      const initialValues = (data || []).reduce((acc, owner) => {
-        acc[owner.id] = { name: owner.name, stationId: owner.stationId }
-        return acc
-      }, {} as Record<string, { name: string; stationId: string }>)
-      setEditingValues(initialValues)
-    }
-  }
+  }, [supabase, router, fetchOwners])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -152,32 +178,6 @@ const ServiceProviderDashboard = () => {
       console.error('Error deleting owner:', error)
     }
   }
-
-  const handleEditOwner = useCallback(async (id: string, field: 'name' | 'stationId', value: string) => {
-    // Only update if the value has changed
-    if (editingValues[id]?.[field] === value) return
-
-    try {
-      const { error } = await supabase
-        .from('User')
-        .update({ [field]: value })
-        .eq('id', id)
-
-      if (error) {
-        console.error('Failed to update owner:', error.message)
-      } else {
-        // Update local state
-        setEditingValues(prev => ({
-          ...prev,
-          [id]: { ...prev[id], [field]: value }
-        }))
-        // Refresh the owners list
-        fetchOwners()
-      }
-    } catch (error) {
-      console.error('Error updating owner:', error)
-    }
-  }, [editingValues, supabase])
 
   if (loading) return <p className="p-6">Loading your dashboard...</p>
 
