@@ -3,9 +3,15 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
+interface RouteParams {
+  params: {
+    id: string
+  }
+}
+
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: RouteParams
 ) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -43,7 +49,7 @@ export async function PUT(
     const { data: managerData, error: managerError } = await supabase
       .from('User')
       .select('id, role, stationId')
-      .eq('id', params.id)
+      .eq('id', context.params.id)
       .eq('role', 'MANAGER')
       .eq('stationId', userData.stationId)
       .single()
@@ -60,7 +66,7 @@ export async function PUT(
         phone,
         ...(email && { email }) // Only include email if it's being updated
       })
-      .eq('id', params.id)
+      .eq('id', context.params.id)
       .eq('role', 'MANAGER')
       .eq('stationId', userData.stationId)
       .select()
@@ -93,7 +99,7 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: RouteParams
 ) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -124,7 +130,7 @@ export async function DELETE(
     const { data: managerData, error: managerError } = await supabase
       .from('User')
       .select('id, role, stationId')
-      .eq('id', params.id)
+      .eq('id', context.params.id)
       .eq('role', 'MANAGER')
       .eq('stationId', userData.stationId)
       .single()
@@ -137,7 +143,7 @@ export async function DELETE(
     const { error } = await supabase
       .from('User')
       .delete()
-      .eq('id', params.id)
+      .eq('id', context.params.id)
       .eq('role', 'MANAGER')
       .eq('stationId', userData.stationId)
 
