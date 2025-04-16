@@ -38,7 +38,6 @@ interface Owner {
   id: string
   email: string
   name: string
-  phone: string
   stationId: string
   isEditing?: boolean
   editedName?: string
@@ -72,7 +71,7 @@ const ServiceProviderDashboard = () => {
   const [owners, setOwners] = useState<Owner[]>([])
   const [search, setSearch] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const [editingValues, setEditingValues] = useState<Record<string, Partial<Owner>>>({})
+  const [editingValues, setEditingValues] = useState<Record<string, { name: string; stationId: string }>>({})
 
   const [stations, setStations] = useState<Station[]>([])
   const [newStationName, setNewStationName] = useState('')
@@ -356,12 +355,12 @@ const ServiceProviderDashboard = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="flex justify-between items-center bg-white rounded-lg shadow p-6">
+        <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Welcome, {userData?.name}</h1>
-            <p className="text-muted-foreground">Service Provider Dashboard</p>
+            <h1 className="text-3xl font-bold">Welcome, {userData?.name}</h1>
+            <p className="text-gray-500">Service Provider Dashboard</p>
           </div>
-          <Button variant="outline" className="text-foreground hover:bg-gray-100" onClick={handleLogout}>
+          <Button variant="outline" onClick={handleLogout}>
             Logout
           </Button>
         </div>
@@ -372,35 +371,33 @@ const ServiceProviderDashboard = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-2">
-              <Building2 className="w-5 h-5 text-primary" />
-              <h2 className="text-xl font-semibold text-foreground">Service Stations</h2>
+              <Building2 className="w-5 h-5" />
+              <h2 className="text-xl font-semibold">Service Stations</h2>
             </div>
-            <Badge variant="outline" className="bg-primary/10 text-primary">{stations.length} Stations</Badge>
+            <Badge variant="outline">{stations.length} Stations</Badge>
           </div>
 
-          <Card className="mb-6 border-primary/20">
+          <Card className="mb-6">
             <CardContent className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-foreground">Station Name</Label>
+                  <Label>Station Name</Label>
                   <Input
                     value={newStationName}
                     onChange={(e) => setNewStationName(e.target.value)}
                     placeholder="Enter station name"
-                    className="border-gray-200 focus:border-primary"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-foreground">Location</Label>
+                  <Label>Location</Label>
                   <Input
                     value={newStationLocation}
                     onChange={(e) => setNewStationLocation(e.target.value)}
                     placeholder="Enter station location"
-                    className="border-gray-200 focus:border-primary"
                   />
                 </div>
               </div>
-              <Button onClick={handleAddStation} className="w-full md:w-auto bg-primary hover:bg-primary/90">
+              <Button onClick={handleAddStation} className="w-full md:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Station
               </Button>
@@ -410,16 +407,16 @@ const ServiceProviderDashboard = () => {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50">
-                  <TableHead className="text-foreground font-semibold">Name</TableHead>
-                  <TableHead className="text-foreground font-semibold">Location</TableHead>
-                  <TableHead className="text-foreground font-semibold">Actions</TableHead>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {stations.map((station) => (
-                  <TableRow key={station.id} className="hover:bg-gray-50">
-                    <TableCell className="text-foreground">
+                  <TableRow key={station.id}>
+                    <TableCell>
                       {editingStations[station.id] ? (
                         <Input
                           value={editingStations[station.id].name}
@@ -433,7 +430,7 @@ const ServiceProviderDashboard = () => {
                         station.name
                       )}
                     </TableCell>
-                    <TableCell className="text-foreground">
+                    <TableCell>
                       {editingStations[station.id] ? (
                         <Input
                           value={editingStations[station.id].location}
@@ -453,7 +450,6 @@ const ServiceProviderDashboard = () => {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleEditStation(station.id)}
-                          className="hover:bg-gray-100"
                         >
                           {editingStations[station.id] ? (
                             <Save className="w-4 h-4 text-green-500" />
@@ -465,7 +461,6 @@ const ServiceProviderDashboard = () => {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDeleteStation(station.id)}
-                          className="hover:bg-gray-100"
                         >
                           <Trash2 className="w-4 h-4 text-red-500" />
                         </Button>
@@ -482,42 +477,40 @@ const ServiceProviderDashboard = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-2">
-              <Users className="w-5 h-5 text-primary" />
-              <h2 className="text-xl font-semibold text-foreground">Station Owners</h2>
+              <Users className="w-5 h-5" />
+              <h2 className="text-xl font-semibold">Station Owners</h2>
             </div>
-            <Badge variant="outline" className="bg-primary/10 text-primary">{owners.length} Owners</Badge>
+            <Badge variant="outline">{owners.length} Owners</Badge>
       </div>
 
-          <Card className="mb-6 border-primary/20">
+          <Card className="mb-6">
         <CardContent className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-foreground">Email</Label>
+          <Label>Email</Label>
                   <Input
                     value={ownerEmail}
                     onChange={(e) => setOwnerEmail(e.target.value)}
                     placeholder="Enter owner email"
-                    className="border-gray-200 focus:border-primary"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-foreground">Name</Label>
+          <Label>Name</Label>
                   <Input
                     value={ownerName}
                     onChange={(e) => setOwnerName(e.target.value)}
                     placeholder="Enter owner name"
-                    className="border-gray-200 focus:border-primary"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-foreground">Station</Label>
+                  <Label>Station</Label>
                   <Popover open={open} onOpenChange={setOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         role="combobox"
                         aria-expanded={open}
-                        className="w-full justify-between border-gray-200 hover:border-primary"
+                        className="w-full justify-between"
                       >
                         {stationId
                           ? stations.find((station) => station.id === stationId)?.name
@@ -531,7 +524,6 @@ const ServiceProviderDashboard = () => {
                           placeholder="Search station..."
                           value={stationSearch}
                           onValueChange={setStationSearch}
-                          className="border-0"
                         />
                         <CommandEmpty>No station found.</CommandEmpty>
                         <CommandGroup>
@@ -543,11 +535,10 @@ const ServiceProviderDashboard = () => {
                                 setStationId(station.id)
                                 setOpen(false)
                               }}
-                              className="cursor-pointer hover:bg-gray-100"
                             >
                               <div className="flex flex-col">
-                                <span className="text-foreground">{station.name}</span>
-                                <span className="text-xs text-muted-foreground">ID: {station.id}</span>
+                                <span>{station.name}</span>
+                                <span className="text-xs text-gray-500">ID: {station.id}</span>
                               </div>
                             </CommandItem>
                           ))}
@@ -557,7 +548,7 @@ const ServiceProviderDashboard = () => {
                   </Popover>
                 </div>
               </div>
-              <Button onClick={handleAddOwner} className="w-full md:w-auto bg-primary hover:bg-primary/90">
+              <Button onClick={handleAddOwner} className="w-full md:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Owner
               </Button>
@@ -571,7 +562,7 @@ const ServiceProviderDashboard = () => {
           placeholder="Search owners..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 border-gray-200 focus:border-primary"
+                className="pl-10"
         />
             </div>
           </div>
@@ -579,28 +570,79 @@ const ServiceProviderDashboard = () => {
           <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-                <TableRow className="bg-gray-50">
-                  <TableHead className="text-foreground font-semibold">Email</TableHead>
-                  <TableHead className="text-foreground font-semibold">Name</TableHead>
-                  <TableHead className="text-foreground font-semibold">Phone</TableHead>
-                  <TableHead className="text-foreground font-semibold">Station ID</TableHead>
-                  <TableHead className="text-foreground font-semibold">Actions</TableHead>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+                  <TableHead>Station</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedOwners.map((owner) => (
-                  <TableRow key={owner.id} className="hover:bg-gray-50">
-                    <TableCell className="text-foreground">
-                      {editingValues[owner.id]?.email || owner.email}
-                    </TableCell>
-                    <TableCell className="text-foreground">
-                      {editingValues[owner.id]?.name || owner.name}
-                    </TableCell>
-                    <TableCell className="text-foreground">
-                      {editingValues[owner.id]?.phone || owner.phone}
+              <TableRow key={owner.id}>
+                <TableCell>
+                      {editingValues[owner.id] ? (
+                  <Input 
+                          value={editingValues[owner.id].name}
+                    onChange={(e) => setEditingValues(prev => ({
+                      ...prev,
+                      [owner.id]: { ...prev[owner.id], name: e.target.value }
+                    }))}
+                          className="border-0 focus:ring-0 p-0"
+                  />
+                      ) : (
+                        owner.name
+                      )}
                 </TableCell>
-                    <TableCell className="text-foreground">
-                      {editingValues[owner.id]?.stationId || owner.stationId}
+                <TableCell>{owner.email}</TableCell>
+                <TableCell>
+                      {editingValues[owner.id] ? (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className="w-full justify-between"
+                            >
+                              {editingValues[owner.id].stationId
+                                ? stations.find((station) => station.id === editingValues[owner.id].stationId)?.name
+                                : "Select station..."}
+                              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0">
+                            <Command>
+                              <CommandInput
+                                placeholder="Search station..."
+                                value={stationSearch}
+                                onValueChange={setStationSearch}
+                              />
+                              <CommandEmpty>No station found.</CommandEmpty>
+                              <CommandGroup>
+                                {filteredStations.map((station) => (
+                                  <CommandItem
+                                    key={station.id}
+                                    value={station.id}
+                                    onSelect={() => {
+                                      setEditingValues(prev => ({
+                      ...prev,
+                                        [owner.id]: { ...prev[owner.id], stationId: station.id }
+                                      }))
+                                    }}
+                                  >
+                                    <div className="flex flex-col">
+                                      <span>{station.name}</span>
+                                      <span className="text-xs text-gray-500">ID: {station.id}</span>
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      ) : (
+                        stations.find(s => s.id === owner.stationId)?.name || owner.stationId
+                      )}
                 </TableCell>
                 <TableCell>
                       <div className="flex items-center space-x-2">
@@ -608,7 +650,6 @@ const ServiceProviderDashboard = () => {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleEditOwner(owner.id)}
-                          className="hover:bg-gray-100"
                         >
                           {editingValues[owner.id] ? (
                             <Save className="w-4 h-4 text-green-500" />
@@ -620,7 +661,6 @@ const ServiceProviderDashboard = () => {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDeleteOwner(owner.id)}
-                          className="hover:bg-gray-100"
                         >
                           <Trash2 className="w-4 h-4 text-red-500" />
                         </Button>
@@ -638,18 +678,16 @@ const ServiceProviderDashboard = () => {
                 variant="outline"
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="border-gray-200 hover:border-primary"
               >
                 Previous
               </Button>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-gray-500">
                 Page {currentPage} of {Math.ceil(filteredOwners.length / PAGE_SIZE)}
               </span>
               <Button
                 variant="outline"
                 onClick={() => setCurrentPage(prev => prev + 1)}
                 disabled={currentPage * PAGE_SIZE >= filteredOwners.length}
-                className="border-gray-200 hover:border-primary"
               >
                 Next
               </Button>

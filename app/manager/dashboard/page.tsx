@@ -270,12 +270,12 @@ export default function ManagerDashboard() {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="flex justify-between items-center bg-white rounded-lg shadow p-6">
+        <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Welcome, {user.name}</h1>
-            <p className="text-muted-foreground">Manager Dashboard</p>
+            <h1 className="text-3xl font-bold">Welcome, {user.name}</h1>
+            <p className="text-gray-500">Manager Dashboard</p>
           </div>
-          <Button variant="outline" className="text-foreground hover:bg-gray-100" onClick={signOut}>
+          <Button variant="outline" onClick={signOut}>
             Logout
           </Button>
         </div>
@@ -286,52 +286,49 @@ export default function ManagerDashboard() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-2">
-              <Users className="w-5 h-5 text-primary" />
-              <h2 className="text-xl font-semibold text-foreground">Station Users</h2>
+              <Users className="w-5 h-5" />
+              <h2 className="text-xl font-semibold">Station Users</h2>
             </div>
-            <Badge variant="outline" className="bg-primary/10 text-primary">{users.length} Users</Badge>
+            <Badge variant="outline">{users.length} Users</Badge>
           </div>
 
           {/* Add User Form */}
-          <Card className="mb-6 border-primary/20">
+          <Card className="mb-6">
             <CardContent className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-foreground">Email</Label>
+                  <Label>Email</Label>
                   <Input
                     value={newUser.email}
                     onChange={(e) => handleNewUserChange('email', e.target.value)}
                     placeholder="Enter user email"
-                    className="border-gray-200 focus:border-primary"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-foreground">Name</Label>
+                  <Label>Name</Label>
                   <Input
                     value={newUser.name}
                     onChange={(e) => handleNewUserChange('name', e.target.value)}
                     placeholder="Enter user name"
-                    className="border-gray-200 focus:border-primary"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-foreground">Phone</Label>
+                  <Label>Phone</Label>
                   <Input
                     value={newUser.phone}
                     onChange={(e) => handleNewUserChange('phone', e.target.value)}
                     placeholder="Enter user phone"
-                    className="border-gray-200 focus:border-primary"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-foreground">Role</Label>
+                  <Label>Role</Label>
                   <Select value={newUser.role} onValueChange={(value) => handleNewUserChange('role', value)}>
-                    <SelectTrigger className="border-gray-200 focus:border-primary">
+                    <SelectTrigger>
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                     <SelectContent>
                       {VALID_ROLES.map(role => (
-                        <SelectItem key={role} value={role} className="cursor-pointer hover:bg-gray-100">
+                        <SelectItem key={role} value={role}>
                           {role}
                         </SelectItem>
                       ))}
@@ -339,7 +336,7 @@ export default function ManagerDashboard() {
                   </Select>
                 </div>
               </div>
-              <Button onClick={handleAddUser} className="w-full md:w-auto bg-primary hover:bg-primary/90">
+              <Button onClick={handleAddUser} className="w-full md:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Add User
               </Button>
@@ -354,7 +351,7 @@ export default function ManagerDashboard() {
                 placeholder="Search users..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 border-gray-200 focus:border-primary"
+                className="pl-10"
               />
             </div>
           </div>
@@ -363,28 +360,82 @@ export default function ManagerDashboard() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50">
-                  <TableHead className="text-foreground font-semibold">Email</TableHead>
-                  <TableHead className="text-foreground font-semibold">Name</TableHead>
-                  <TableHead className="text-foreground font-semibold">Phone</TableHead>
-                  <TableHead className="text-foreground font-semibold">Role</TableHead>
-                  <TableHead className="text-foreground font-semibold">Actions</TableHead>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedUsers.map((user) => (
-                  <TableRow key={user.id} className="hover:bg-gray-50">
-                    <TableCell className="text-foreground">
-                      {editingValues[user.id]?.email || user.email}
+                  <TableRow key={user.id}>
+                    <TableCell>
+                      {editingValues[user.id] ? (
+                        <Input
+                          value={editingValues[user.id].name}
+                          onChange={(e) => setEditingValues(prev => ({
+                            ...prev,
+                            [user.id]: { ...prev[user.id], name: e.target.value }
+                          }))}
+                          className="border-0 focus:ring-0 p-0"
+                        />
+                      ) : (
+                        user.name
+                      )}
                     </TableCell>
-                    <TableCell className="text-foreground">
-                      {editingValues[user.id]?.name || user.name}
+                    <TableCell>
+                      {editingValues[user.id] ? (
+                        <Input
+                          value={editingValues[user.id].email}
+                          onChange={(e) => setEditingValues(prev => ({
+                            ...prev,
+                            [user.id]: { ...prev[user.id], email: e.target.value }
+                          }))}
+                          className="border-0 focus:ring-0 p-0"
+                        />
+                      ) : (
+                        user.email
+                      )}
                     </TableCell>
-                    <TableCell className="text-foreground">
-                      {editingValues[user.id]?.phone || user.phone}
+                    <TableCell>
+                      {editingValues[user.id] ? (
+                        <Input
+                          value={editingValues[user.id].phone}
+                          onChange={(e) => setEditingValues(prev => ({
+                            ...prev,
+                            [user.id]: { ...prev[user.id], phone: e.target.value }
+                          }))}
+                          className="border-0 focus:ring-0 p-0"
+                        />
+                      ) : (
+                        user.phone
+                      )}
                     </TableCell>
-                    <TableCell className="text-foreground">
-                      {editingValues[user.id]?.role || user.role}
+                    <TableCell>
+                      {editingValues[user.id] ? (
+                        <Select
+                          value={editingValues[user.id].role}
+                          onValueChange={(value) => setEditingValues(prev => ({
+                            ...prev,
+                            [user.id]: { ...prev[user.id], role: value }
+                          }))}
+                        >
+                          <SelectTrigger className="border-0 focus:ring-0 p-0">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {VALID_ROLES.map(role => (
+                              <SelectItem key={role} value={role}>
+                                {role}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        user.role
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
@@ -392,7 +443,6 @@ export default function ManagerDashboard() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleEditUser(user.id)}
-                          className="hover:bg-gray-100"
                         >
                           {editingValues[user.id] ? (
                             <Save className="w-4 h-4 text-green-500" />
@@ -404,7 +454,6 @@ export default function ManagerDashboard() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDeleteUser(user.id)}
-                          className="hover:bg-gray-100"
                         >
                           <Trash2 className="w-4 h-4 text-red-500" />
                         </Button>
@@ -423,18 +472,16 @@ export default function ManagerDashboard() {
                 variant="outline"
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="border-gray-200 hover:border-primary"
               >
                 Previous
               </Button>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-gray-500">
                 Page {currentPage} of {Math.ceil(filteredUsers.length / PAGE_SIZE)}
               </span>
               <Button
                 variant="outline"
                 onClick={() => setCurrentPage(prev => prev + 1)}
                 disabled={currentPage * PAGE_SIZE >= filteredUsers.length}
-                className="border-gray-200 hover:border-primary"
               >
                 Next
       </Button>

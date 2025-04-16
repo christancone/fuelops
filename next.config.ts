@@ -1,5 +1,6 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from 'next'
+
+const nextConfig: NextConfig = {
   output: 'standalone', // needed for Docker deployments
   reactStrictMode: true,
   images: {
@@ -20,4 +21,4 @@ const nextConfig = {
   },
 }
 
-export default nextConfig 
+export default nextConfig

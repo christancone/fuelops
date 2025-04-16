@@ -53,9 +53,9 @@ export default function CustomerDashboard() {
 
   return (
     <div className="p-6 space-y-4">
-      <h1 className="text-2xl font-semibold text-foreground">👋 Welcome, {userData?.name || 'User'}</h1>
-      <p className="text-muted-foreground">Your role: <strong className="text-foreground">{userData?.role}</strong></p>
-      <Button variant="destructive" className="text-foreground" onClick={handleLogout}>
+      <h1 className="text-2xl font-semibold">👋 Welcome, {userData?.name || 'User'}</h1>
+      <p className="text-gray-600">Your role: <strong>{userData?.role}</strong></p>
+      <Button variant="destructive" onClick={handleLogout}>
         Log out
       </Button>
     </div>

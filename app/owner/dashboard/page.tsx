@@ -219,12 +219,12 @@ const OwnerDashboard = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="flex justify-between items-center bg-white rounded-lg shadow p-6">
+        <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Welcome, {userData?.name}</h1>
-            <p className="text-muted-foreground">Owner Dashboard</p>
+            <h1 className="text-3xl font-bold">Welcome, {userData?.name}</h1>
+            <p className="text-gray-500">Owner Dashboard</p>
           </div>
-          <Button variant="outline" className="text-foreground hover:bg-gray-100" onClick={handleLogout}>
+          <Button variant="outline" onClick={handleLogout}>
             Logout
           </Button>
         </div>
@@ -235,44 +235,41 @@ const OwnerDashboard = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-2">
-              <Users className="w-5 h-5 text-primary" />
-              <h2 className="text-xl font-semibold text-foreground">Station Managers</h2>
+              <Users className="w-5 h-5" />
+              <h2 className="text-xl font-semibold">Station Managers</h2>
             </div>
-            <Badge variant="outline" className="bg-primary/10 text-primary">{managers.length} Managers</Badge>
+            <Badge variant="outline">{managers.length} Managers</Badge>
           </div>
 
-          <Card className="mb-6 border-primary/20">
+          <Card className="mb-6">
             <CardContent className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-foreground">Email</Label>
+                  <Label>Email</Label>
                   <Input
                     value={managerEmail}
                     onChange={(e) => setManagerEmail(e.target.value)}
                     placeholder="Enter manager email"
-                    className="border-gray-200 focus:border-primary"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-foreground">Name</Label>
+                  <Label>Name</Label>
                   <Input
                     value={managerName}
                     onChange={(e) => setManagerName(e.target.value)}
                     placeholder="Enter manager name"
-                    className="border-gray-200 focus:border-primary"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-foreground">Phone</Label>
+                  <Label>Phone</Label>
                   <Input
                     value={managerPhone}
                     onChange={(e) => setManagerPhone(e.target.value)}
                     placeholder="Enter manager phone"
-                    className="border-gray-200 focus:border-primary"
                   />
                 </div>
               </div>
-              <Button onClick={handleAddManager} className="w-full md:w-auto bg-primary hover:bg-primary/90">
+              <Button onClick={handleAddManager} className="w-full md:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Manager
               </Button>
@@ -286,7 +283,7 @@ const OwnerDashboard = () => {
                 placeholder="Search managers..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 border-gray-200 focus:border-primary"
+                className="pl-10"
               />
             </div>
           </div>
@@ -294,24 +291,57 @@ const OwnerDashboard = () => {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50">
-                  <TableHead className="text-foreground font-semibold">Email</TableHead>
-                  <TableHead className="text-foreground font-semibold">Name</TableHead>
-                  <TableHead className="text-foreground font-semibold">Phone</TableHead>
-                  <TableHead className="text-foreground font-semibold">Actions</TableHead>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedManagers.map((manager) => (
-                  <TableRow key={manager.id} className="hover:bg-gray-50">
-                    <TableCell className="text-foreground">
-                      {editingValues[manager.id]?.email || manager.email}
+                  <TableRow key={manager.id}>
+                    <TableCell>
+                      {editingValues[manager.id] ? (
+                        <Input
+                          value={editingValues[manager.id].name}
+                          onChange={(e) => setEditingValues(prev => ({
+                            ...prev,
+                            [manager.id]: { ...prev[manager.id], name: e.target.value }
+                          }))}
+                          className="border-0 focus:ring-0 p-0"
+                        />
+                      ) : (
+                        manager.name
+                      )}
                     </TableCell>
-                    <TableCell className="text-foreground">
-                      {editingValues[manager.id]?.name || manager.name}
+                    <TableCell>
+                      {editingValues[manager.id] ? (
+                        <Input
+                          value={editingValues[manager.id].email}
+                          onChange={(e) => setEditingValues(prev => ({
+                            ...prev,
+                            [manager.id]: { ...prev[manager.id], email: e.target.value }
+                          }))}
+                          className="border-0 focus:ring-0 p-0"
+                        />
+                      ) : (
+                        manager.email
+                      )}
                     </TableCell>
-                    <TableCell className="text-foreground">
-                      {editingValues[manager.id]?.phone || manager.phone}
+                    <TableCell>
+                      {editingValues[manager.id] ? (
+                        <Input
+                          value={editingValues[manager.id].phone}
+                          onChange={(e) => setEditingValues(prev => ({
+                            ...prev,
+                            [manager.id]: { ...prev[manager.id], phone: e.target.value }
+                          }))}
+                          className="border-0 focus:ring-0 p-0"
+                        />
+                      ) : (
+                        manager.phone
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
@@ -319,7 +349,6 @@ const OwnerDashboard = () => {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleEditManager(manager.id)}
-                          className="hover:bg-gray-100"
                         >
                           {editingValues[manager.id] ? (
                             <Save className="w-4 h-4 text-green-500" />
@@ -331,7 +360,6 @@ const OwnerDashboard = () => {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDeleteManager(manager.id)}
-                          className="hover:bg-gray-100"
                         >
                           <Trash2 className="w-4 h-4 text-red-500" />
                         </Button>
@@ -349,18 +377,16 @@ const OwnerDashboard = () => {
                 variant="outline"
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="border-gray-200 hover:border-primary"
               >
                 Previous
               </Button>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-gray-500">
                 Page {currentPage} of {Math.ceil(filteredManagers.length / PAGE_SIZE)}
               </span>
               <Button
                 variant="outline"
                 onClick={() => setCurrentPage(prev => prev + 1)}
                 disabled={currentPage * PAGE_SIZE >= filteredManagers.length}
-                className="border-gray-200 hover:border-primary"
               >
                 Next
       </Button>
