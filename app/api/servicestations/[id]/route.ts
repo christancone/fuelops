@@ -2,12 +2,14 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+type Context = {
+  params: Promise<{ id: string }>
+}
+
+export async function PUT(req: Request, context: Context) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
+    const { id } = await context.params
     
     // Check if user is authenticated
     const { data: { session } } = await supabase.auth.getSession()
@@ -31,13 +33,13 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    const { name, location } = await request.json()
+    const { name, location } = await req.json()
 
     // Update the station
     const { data, error } = await supabase
       .from('Station')
       .update({ name, location })
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single()
 

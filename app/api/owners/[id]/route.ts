@@ -2,77 +2,91 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+type Context = {
+  params: Promise<{ id: string }>
+}
+
+export async function PUT(req: Request, context: Context) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
-    const { name, stationId } = await request.json()
+    const { id } = await context.params
+    const { name, stationId } = await req.json()
 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: userData } = await supabase
+    const { data: userData, error: userError } = await supabase
       .from('User')
       .select('role')
       .eq('id', user.id)
       .single()
 
+    if (userError) {
+      console.error('Error fetching user data:', userError)
+      return NextResponse.json({ error: 'Failed to fetch user data' }, { status: 500 })
+    }
+
     if (!userData || userData.role !== 'SERVICE_PROVIDER') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { error } = await supabase
+    const { error: updateError } = await supabase
       .from('User')
       .update({ name, stationId })
-      .eq('id', params.id)
+      .eq('id', id)
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (updateError) {
+      console.error('Error updating owner:', updateError)
+      return NextResponse.json({ error: updateError.message }, { status: 500 })
     }
 
     return NextResponse.json({ message: 'Owner updated successfully' })
   } catch (error) {
+    console.error('Unexpected error in PUT /owners/[id]:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: Request, context: Context) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
+    const { id } = await context.params
 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: userData } = await supabase
+    const { data: userData, error: userError } = await supabase
       .from('User')
       .select('role')
       .eq('id', user.id)
       .single()
 
+    if (userError) {
+      console.error('Error fetching user data:', userError)
+      return NextResponse.json({ error: 'Failed to fetch user data' }, { status: 500 })
+    }
+
     if (!userData || userData.role !== 'SERVICE_PROVIDER') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { error } = await supabase
+    const { error: deleteError } = await supabase
       .from('User')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (deleteError) {
+      console.error('Error deleting owner:', deleteError)
+      return NextResponse.json({ error: deleteError.message }, { status: 500 })
     }
 
     return NextResponse.json({ message: 'Owner deleted successfully' })
   } catch (error) {
+    console.error('Unexpected error in DELETE /owners/[id]:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-} 
+}

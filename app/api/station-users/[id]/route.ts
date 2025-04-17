@@ -4,10 +4,11 @@ import { NextResponse } from 'next/server'
 
 const VALID_ROLES = ['ACCOUNTANT', 'EMPLOYEE', 'CUSTOMER']
 
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+type Context = {
+  params: Promise<{ id: string }>
+}
+
+export async function PUT(req: Request, context: Context) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
     
@@ -33,7 +34,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    const { name, phone, email, role } = await request.json()
+    const { name, phone, email, role } = await req.json()
 
     // Validate input data
     if (!name || !phone) {
@@ -55,7 +56,7 @@ export async function PUT(
     const { data: targetUser, error: targetError } = await supabase
       .from('User')
       .select('id, role, stationId')
-      .eq('id', params.id)
+      .eq('id', await context.params)
       .eq('stationId', userData.stationId)
       .in('role', VALID_ROLES)
       .single()
@@ -73,7 +74,7 @@ export async function PUT(
         ...(email && { email }),
         ...(role && { role })
       })
-      .eq('id', params.id)
+      .eq('id', await context.params)
       .eq('stationId', userData.stationId)
       .select()
       .single()
@@ -91,10 +92,7 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: Request, context: Context) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
     
@@ -124,7 +122,7 @@ export async function DELETE(
     const { data: targetUser, error: targetError } = await supabase
       .from('User')
       .select('id, role, stationId')
-      .eq('id', params.id)
+      .eq('id', await context.params)
       .eq('stationId', userData.stationId)
       .in('role', VALID_ROLES)
       .single()
@@ -137,7 +135,7 @@ export async function DELETE(
     const { error } = await supabase
       .from('User')
       .delete()
-      .eq('id', params.id)
+      .eq('id', await context.params)
       .eq('stationId', userData.stationId)
 
     if (error) {

@@ -3,18 +3,6 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// Function to generate a secure random password
-function generateSecurePassword() {
-  const length = 12
-  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
-  let password = ""
-  for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * charset.length)
-    password += charset[randomIndex]
-  }
-  return password
-}
-
 // Simple email validation function
 function isValidEmail(email: string) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/

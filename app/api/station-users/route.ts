@@ -1,24 +1,8 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 const VALID_ROLES = ['ACCOUNTANT', 'EMPLOYEE', 'CUSTOMER']
-
-interface UserData {
-  id: string
-  email: string
-  name: string
-  phone: string
-  role: string
-  stationId: string
-}
-
-interface AuthResponse {
-  user: {
-    id: string
-  } | null
-}
 
 export async function GET() {
   try {

@@ -26,7 +26,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
 
 interface UserData {
   name: string
@@ -58,7 +57,7 @@ const PAGE_SIZE = 5
 const ServiceProviderDashboard = () => {
   const router = useRouter()
   const supabase = createClientComponentClient()
-  const { user, loading: authLoading } = useAuth()
+  const { user } = useAuth()
 
   const [userData, setUserData] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)

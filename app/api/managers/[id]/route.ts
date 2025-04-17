@@ -1,28 +1,19 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 
-interface RouteParams {
-  params: {
-    id: string
-  }
+type Context = {
+  params: Promise<{ id: string }>
 }
 
-export async function PUT(
-  request: Request,
-  context: RouteParams
-) {
+export async function PUT(req: Request, context: Context) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
-    
-    // Check if user is authenticated
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { id } = await context.params
 
-    // Get user role and stationId
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const { data: userData, error: userError } = await supabase
       .from('User')
       .select('role, stationId')
@@ -33,23 +24,20 @@ export async function PUT(
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Only owners can update managers
     if (userData.role !== 'OWNER') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    const { name, phone, email } = await request.json()
+    const { name, phone, email } = await req.json()
 
-    // Validate input data
     if (!name || !phone) {
       return NextResponse.json({ error: 'Name and phone are required' }, { status: 400 })
     }
 
-    // Check if the manager exists and belongs to the owner's station
     const { data: managerData, error: managerError } = await supabase
       .from('User')
       .select('id, role, stationId')
-      .eq('id', context.params.id)
+      .eq('id', id)
       .eq('role', 'MANAGER')
       .eq('stationId', userData.stationId)
       .single()
@@ -58,15 +46,14 @@ export async function PUT(
       return NextResponse.json({ error: 'Manager not found or unauthorized' }, { status: 404 })
     }
 
-    // Update the manager's details in the User table
     const { data, error } = await supabase
       .from('User')
-      .update({ 
-        name, 
+      .update({
+        name,
         phone,
-        ...(email && { email }) // Only include email if it's being updated
+        ...(email && { email })
       })
-      .eq('id', context.params.id)
+      .eq('id', id)
       .eq('role', 'MANAGER')
       .eq('stationId', userData.stationId)
       .select()
@@ -76,15 +63,13 @@ export async function PUT(
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
-    // If email is being updated, send a password reset email to the manager
     if (email) {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/reset-password`
       })
 
       if (resetError) {
-        console.error('Error sending password reset email:', resetError)
-        // Don't fail the request if password reset email fails
+        console.error('Error sending password reset email:', resetError.message)
       }
     }
 
@@ -97,20 +82,14 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: Request,
-  context: RouteParams
-) {
+export async function DELETE(req: Request, context: Context) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
-    
-    // Check if user is authenticated
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { id } = await context.params
 
-    // Get user role and stationId
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const { data: userData, error: userError } = await supabase
       .from('User')
       .select('role, stationId')
@@ -121,16 +100,14 @@ export async function DELETE(
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Only owners can delete managers
     if (userData.role !== 'OWNER') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    // Check if the manager exists and belongs to the owner's station
     const { data: managerData, error: managerError } = await supabase
       .from('User')
       .select('id, role, stationId')
-      .eq('id', context.params.id)
+      .eq('id', id)
       .eq('role', 'MANAGER')
       .eq('stationId', userData.stationId)
       .single()
@@ -139,11 +116,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Manager not found or unauthorized' }, { status: 404 })
     }
 
-    // Delete the manager from User table
     const { error } = await supabase
       .from('User')
       .delete()
-      .eq('id', context.params.id)
+      .eq('id', id)
       .eq('role', 'MANAGER')
       .eq('stationId', userData.stationId)
 
@@ -158,4 +134,4 @@ export async function DELETE(
       { status: 500 }
     )
   }
-} 
+}
