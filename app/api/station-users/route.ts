@@ -1,8 +1,9 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
-const VALID_ROLES = ['ACCOUNTANT', 'EMPLOYEE', 'CUSTOMER']
+const VALID_ROLES = ['ACCOUNTANT', 'EMPLOYEE']
 
 export async function GET() {
   try {
@@ -10,39 +11,57 @@ export async function GET() {
     
     // Check if user is authenticated
     const { data: { session } } = await supabase.auth.getSession()
+    console.log('Session:', session) // Debug log
+
     if (!session) {
+      console.log('No session found') // Debug log
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Get user role and stationId
-    const { data: managerData, error: userError } = await supabase
+    const { data: managerData, error: managerError } = await supabase
       .from('User')
       .select('role, stationId')
       .eq('id', session.user.id)
       .single()
 
-    if (userError || !managerData) {
+    console.log('Manager data:', managerData) // Debug log
+    console.log('Manager error:', managerError) // Debug log
+
+    if (managerError) {
+      console.error('Error fetching manager data:', managerError)
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    if (!managerData) {
+      console.log('No manager data found') // Debug log
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
     // Only managers can view users
     if (managerData.role !== 'MANAGER') {
+      console.log('User is not a manager, role:', managerData.role) // Debug log
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    // Get users from the manager's station
+    // Get users from the manager's station (excluding customers)
     const { data, error } = await supabase
       .from('User')
       .select('id, email, name, phone, role, stationId')
       .eq('stationId', managerData.stationId)
       .in('role', VALID_ROLES)
 
+    console.log('Users data:', data) // Debug log
+    console.log('Users error:', error) // Debug log
+
     if (error) {
+      console.error('Error fetching users:', error)
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
     return NextResponse.json(data)
   } catch (error) {
+    console.error('Error in GET /api/station-users:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Internal server error' },
       { status: 500 }
@@ -50,60 +69,45 @@ export async function GET() {
   }
 }
 
-// Add email validation function
-function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emailRegex.test(email)
-}
-
 export async function POST(request: Request) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
     
-    // Check if user is authenticated
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
+    // Get the current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user role and stationId
-    const { data: managerData, error: userError } = await supabase
+    // Get the manager's data to verify role and get station ID
+    const { data: managerData, error: managerError } = await supabase
       .from('User')
       .select('role, stationId')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single()
 
-    if (userError || !managerData) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    if (managerError || !managerData) {
+      return NextResponse.json({ error: 'Manager not found' }, { status: 404 })
     }
 
-    // Only managers can create users
     if (managerData.role !== 'MANAGER') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+      return NextResponse.json({ error: 'Only managers can create users' }, { status: 403 })
     }
 
-    const { email, name, phone, role } = await request.json()
+    const { name, email, phone, role } = await request.json()
 
-    // Validate input data
-    if (!email || !name || !phone || !role) {
+    // Validate required fields
+    if (!name || !email || !phone || !role) {
       return NextResponse.json(
-        { error: 'All fields are required' },
-        { status: 400 }
-      )
-    }
-
-    // Validate email format
-    if (!isValidEmail(email)) {
-      return NextResponse.json(
-        { error: 'Please enter a valid email address' },
+        { error: 'Name, email, phone, and role are required' },
         { status: 400 }
       )
     }
 
     // Validate role
-    if (!VALID_ROLES.includes(role)) {
+    if (!['EMPLOYEE', 'ACCOUNTANT'].includes(role)) {
       return NextResponse.json(
-        { error: 'Invalid role' },
+        { error: 'Invalid role. Must be either EMPLOYEE or ACCOUNTANT' },
         { status: 400 }
       )
     }
@@ -117,13 +121,19 @@ export async function POST(request: Request) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: 'A user with this email already exists' },
+        { error: 'Email already in use' },
         { status: 400 }
       )
     }
 
+    // Create a new Supabase client instance for user creation
+    const createUserClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+
     // Create user with default password
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    const { data: authData, error: authError } = await createUserClient.auth.signUp({
       email,
       password: 'angel123',
       options: {
@@ -137,6 +147,7 @@ export async function POST(request: Request) {
     })
 
     if (authError) {
+      console.error('Error creating auth user:', authError)
       return NextResponse.json({ error: authError.message }, { status: 400 })
     }
 
@@ -145,12 +156,12 @@ export async function POST(request: Request) {
     }
 
     // Create user record in User table
-    const { data, error } = await supabase
+    const { data: newUser, error: createError } = await supabase
       .from('User')
       .insert({
         id: authData.user.id,
-        email,
         name,
+        email,
         phone,
         role,
         stationId: managerData.stationId
@@ -158,15 +169,19 @@ export async function POST(request: Request) {
       .select()
       .single()
 
-    if (error) {
-      // If User table insert fails, we can't delete the auth user without admin privileges
-      return NextResponse.json({ error: error.message }, { status: 400 })
+    if (createError) {
+      console.error('Error creating user:', createError)
+      return NextResponse.json(
+        { error: 'Failed to create user' },
+        { status: 500 }
+      )
     }
 
-    return NextResponse.json(data)
+    return NextResponse.json(newUser, { status: 201 })
   } catch (error) {
+    console.error('Error in POST /api/station-users:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

@@ -1,5 +1,4 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
@@ -11,7 +10,7 @@ export async function PUT(req: Request, context: Context) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
     const { id } = await context.params
-    const { name, email, phone, role } = await req.json()
+    const { name, email, phone } = await req.json()
 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
@@ -50,18 +49,18 @@ export async function PUT(req: Request, context: Context) {
 
     const { error: updateError } = await supabase
       .from('User')
-      .update({ name, email, phone, role })
+      .update({ name, email, phone })
       .eq('id', id)
       .eq('stationId', userData.stationId)
 
     if (updateError) {
-      console.error('Error updating user:', updateError)
+      console.error('Error updating customer:', updateError)
       return NextResponse.json({ error: updateError.message }, { status: 500 })
     }
 
-    return NextResponse.json({ message: 'User updated successfully' })
+    return NextResponse.json({ message: 'Customer updated successfully' })
   } catch (error) {
-    console.error('Unexpected error in PUT /station-users/[id]:', error)
+    console.error('Unexpected error in PUT /customers/[id]:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -91,35 +90,16 @@ export async function DELETE(req: Request, context: Context) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if the user exists and belongs to the manager's station
-    const { data: userToDelete, error: userCheckError } = await supabase
+    // Check if the customer exists and belongs to the manager's station
+    const { data: customerToDelete, error: customerCheckError } = await supabase
       .from('User')
       .select('id')
       .eq('id', id)
       .eq('stationId', userData.stationId)
       .single()
 
-    if (userCheckError || !userToDelete) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
-    // Create a new Supabase client instance with service role key for auth operations
-    const authClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
-
-    // Delete user from auth table
-    const { error: authError } = await authClient.auth.admin.deleteUser(id)
-    if (authError) {
-      console.error('Error deleting user from auth:', authError)
-      return NextResponse.json({ error: 'Failed to delete user from auth' }, { status: 500 })
+    if (customerCheckError || !customerToDelete) {
+      return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
     }
 
     const { error: deleteError } = await supabase
@@ -128,13 +108,13 @@ export async function DELETE(req: Request, context: Context) {
       .eq('id', id)
 
     if (deleteError) {
-      console.error('Error deleting user:', deleteError)
+      console.error('Error deleting customer:', deleteError)
       return NextResponse.json({ error: deleteError.message }, { status: 500 })
     }
 
-    return NextResponse.json({ message: 'User deleted successfully' })
+    return NextResponse.json({ message: 'Customer deleted successfully' })
   } catch (error) {
-    console.error('Unexpected error in DELETE /station-users/[id]:', error)
+    console.error('Unexpected error in DELETE /customers/[id]:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 } 

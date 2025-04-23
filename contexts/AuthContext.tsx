@@ -17,6 +17,7 @@ interface AuthContextType {
   user: User | null
   loading: boolean
   signOut: () => Promise<void>
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -27,37 +28,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const supabase = createClientComponentClient()
 
-  useEffect(() => {
-    const getUser = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        
-        if (session?.user) {
-          const { data: userData } = await supabase
-            .from('User')
-            .select('*')
-            .eq('id', session.user.id)
-            .single()
+  const refreshUser = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (session?.user) {
+        const { data: userData, error } = await supabase
+          .from('User')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
 
-          if (userData) {
-            setUser(userData)
-          }
+        if (error) {
+          console.error('Error fetching user data:', error)
+          setUser(null)
+          return
         }
-      } catch (error) {
-        console.error('Error fetching user:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
 
-    getUser()
+        if (userData) {
+          setUser(userData)
+        }
+      } else {
+        setUser(null)
+      }
+    } catch (error) {
+      console.error('Error refreshing user:', error)
+      setUser(null)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    refreshUser()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
         setUser(null)
         router.push('/login')
       } else if (event === 'SIGNED_IN' && session?.user) {
-        getUser()
+        refreshUser()
       }
     })
 
@@ -77,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signOut, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )
